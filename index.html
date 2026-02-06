@@ -6,22 +6,25 @@
 
 <title>omapeko PWA</title>
 
-<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
 
-<!-- iOS向け -->
+<!-- iOS -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icon-192.png">
 
 <style>
+:root{
+  --bg:#000;
+  --accent:#00e5ff;
+}
 html,body{
   margin:0;
   padding:0;
   width:100%;
   height:100%;
-  background:#000;
+  background:var(--bg);
   color:#fff;
   font-family: system-ui, -apple-system, BlinkMacSystemFont;
 }
@@ -29,24 +32,85 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
+  overflow:hidden;
 }
+
+/* Safari案内 */
 #guide{
   text-align:center;
-  opacity:.8;
+  opacity:.85;
+}
+
+/* アプリ本体 */
+#app{
+  display:none;
+  text-align:center;
+}
+
+/* ボタン */
+button{
+  background:none;
+  border:2px solid var(--accent);
+  color:var(--accent);
+  padding:16px 32px;
+  font-size:18px;
+  border-radius:999px;
+  cursor:pointer;
+  transition:.25s;
+}
+button:active{
+  transform:scale(.95);
+  background:var(--accent);
+  color:#000;
+}
+
+.fade{
+  animation:fade .4s ease;
+}
+@keyframes fade{
+  from{opacity:0; transform:translateY(10px);}
+  to{opacity:1; transform:none;}
 }
 </style>
 </head>
 <body>
 
+<!-- Safariで開いた時 -->
 <div id="guide">
-  <h1>omapeko PWA</h1>
+  <h2>omapeko PWA</h2>
   <p>📱 共有 → ホーム画面に追加</p>
 </div>
 
+<!-- PWA起動時 -->
+<div id="app">
+  <h1 id="title">omapeko App</h1>
+  <p id="status">READY</p>
+  <button id="startBtn">START</button>
+</div>
+
 <script>
-if (window.navigator.standalone === true) {
-  document.getElementById("guide").style.display = "none";
+const isPWA = window.navigator.standalone === true;
+
+// 表示切り替え
+if(isPWA){
+  document.getElementById("guide").style.display="none";
+  document.getElementById("app").style.display="block";
 }
+
+// ボタン挙動
+const btn = document.getElementById("startBtn");
+const status = document.getElementById("status");
+
+btn.addEventListener("click",()=>{
+  status.textContent = "RUNNING...";
+  status.classList.add("fade");
+
+  document.documentElement.style.setProperty("--bg","#05070c");
+
+  setTimeout(()=>{
+    status.textContent = "TAP AGAIN";
+  },600);
+});
 </script>
 
 </body>
