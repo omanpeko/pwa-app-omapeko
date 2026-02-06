@@ -90,7 +90,11 @@ const isStandalone =
   window.matchMedia('(display-mode: standalone)').matches ||
   window.navigator.standalone === true;
 
-// 分岐
+const iosSafari = document.getElementById("iosSafari");
+const iosChrome = document.getElementById("iosChrome");
+const app = document.getElementById("app");
+
+// ===== 分岐 =====
 if (isStandalone) {
   app.classList.remove("hidden");
 } else if (isIOS && isSafari) {
@@ -101,25 +105,34 @@ if (isStandalone) {
   app.classList.remove("hidden");
 }
 
-// 演出
+// ===== 演出 =====
 const tap = document.getElementById("tap");
-tap?.addEventListener("click",(e)=>{
+const status = document.getElementById("status");
+
+tap.addEventListener("click",(e)=>{
+  console.log("TAP clicked"); // ← デバッグ用
+
   navigator.vibrate?.(40);
-  const r=document.createElement("div");
-  r.className="ripple";
-  r.style.left=e.clientX+"px";
-  r.style.top=e.clientY+"px";
+
+  const r = document.createElement("div");
+  r.className = "ripple";
+  r.style.left = e.clientX + "px";
+  r.style.top = e.clientY + "px";
   document.body.appendChild(r);
+
   setTimeout(()=>r.remove(),800);
-  status.textContent="ACTIVE";
+
+  status.textContent = "ACTIVE";
 });
 
-// URLコピー
-copyUrl?.addEventListener("click",()=>{
+// ===== URLコピー =====
+const copyBtn = document.getElementById("copyUrl");
+copyBtn?.addEventListener("click",()=>{
   navigator.clipboard.writeText(location.href);
   alert("Safariで貼り付けて開いてください");
 });
 </script>
+
 
 </body>
 </html>
