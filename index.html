@@ -6,11 +6,9 @@
 
 <title>omapeko PWA</title>
 
-<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
 
-<!-- iOS -->
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="apple-touch-icon" href="icon-192.png">
@@ -34,35 +32,61 @@ body{
   align-items:center;
   justify-content:center;
   text-align:center;
+  overflow:hidden;
 }
 
-/* 共通UI */
-h1{margin-bottom:12px;}
-p{opacity:.85;}
+h1{margin-bottom:10px;}
+p{opacity:.85}
+
+/* ボタン */
 button{
-  margin-top:16px;
+  margin-top:20px;
   background:none;
   border:2px solid var(--accent);
   color:var(--accent);
-  padding:14px 28px;
-  font-size:16px;
+  padding:16px 36px;
+  font-size:18px;
   border-radius:999px;
   cursor:pointer;
-  transition:.2s;
+  transition:.25s;
 }
 button:active{
   transform:scale(.95);
-  background:var(--accent);
-  color:#000;
 }
 
-/* フェード */
-.fade{
-  animation:fade .4s ease;
+/* 波紋 */
+.ripple{
+  position:absolute;
+  width:20px;
+  height:20px;
+  border-radius:50%;
+  background:rgba(0,229,255,.25);
+  animation:ripple 0.8s ease-out forwards;
+  pointer-events:none;
 }
-@keyframes fade{
-  from{opacity:0; transform:translateY(10px);}
-  to{opacity:1; transform:none;}
+@keyframes ripple{
+  to{
+    transform:scale(40);
+    opacity:0;
+  }
+}
+
+/* グリッチ */
+.glitch{
+  animation:glitch .4s linear;
+}
+@keyframes glitch{
+  0%{transform:translateX(0)}
+  25%{transform:translateX(-2px)}
+  50%{transform:translateX(2px)}
+  75%{transform:translateX(-1px)}
+  100%{transform:none}
+}
+
+/* ロード */
+.loading{
+  opacity:.6;
+  pointer-events:none;
 }
 
 /* 非表示 */
@@ -71,62 +95,50 @@ button:active{
 </head>
 <body>
 
-<!-- iPhone Chrome用 -->
-<div id="iosChrome" class="hidden">
-  <h1>Safariで開いてね</h1>
-  <p>
-    iPhoneではSafariから開くと<br>
-    アプリとして全画面で使えます📱
-  </p>
-  <button id="copyUrl">URLをコピー</button>
-</div>
-
-<!-- Safari / Android / PC 共通 -->
-<div id="main" class="hidden">
+<div id="main">
   <h1 id="title">omapeko App</h1>
   <p id="status">READY</p>
   <button id="action">TAP</button>
 </div>
 
 <script>
-// ===== 判定 =====
-const ua = navigator.userAgent;
-const isIOS = /iPhone|iPad|iPod/.test(ua);
-const isSafari = /^((?!chrome|crios|fxios).)*safari/i.test(ua);
-const isStandalone =
-  window.matchMedia('(display-mode: standalone)').matches ||
-  window.navigator.standalone === true;
-
-// ===== 表示制御 =====
-const iosChrome = document.getElementById("iosChrome");
-const main = document.getElementById("main");
-
-if(isIOS && !isSafari && !isStandalone){
-  // iPhone Chrome
-  iosChrome.classList.remove("hidden");
-}else{
-  // Safari / Android / PC / PWA
-  main.classList.remove("hidden");
-}
-
-// ===== ボタン動作 =====
 const action = document.getElementById("action");
 const status = document.getElementById("status");
+const title = document.getElementById("title");
 
-action?.addEventListener("click",()=>{
+// 波紋生成
+function ripple(x,y){
+  const r = document.createElement("div");
+  r.className = "ripple";
+  r.style.left = x+"px";
+  r.style.top = y+"px";
+  document.body.appendChild(r);
+  setTimeout(()=>r.remove(),800);
+}
+
+action.addEventListener("click",(e)=>{
+  // バイブ（対応端末）
+  navigator.vibrate?.(40);
+
+  // 波紋
+  ripple(e.clientX,e.clientY);
+
+  // ボタンロック
+  action.classList.add("loading");
+  action.textContent = "LOADING...";
+
+  // グリッチ
+  status.classList.add("glitch");
+  title.classList.add("glitch");
+
   status.textContent = "RUNNING...";
-  status.classList.add("fade");
   document.documentElement.style.setProperty("--bg","#05070c");
 
   setTimeout(()=>{
-    status.textContent = "TAP AGAIN";
-  },600);
-});
-
-// ===== URLコピー =====
-document.getElementById("copyUrl")?.addEventListener("click",()=>{
-  navigator.clipboard.writeText(location.href);
-  alert("URLをコピーしました。\nSafariで貼り付けて開いてください。");
+    status.textContent = "ACTIVE";
+    action.textContent = "DONE";
+    action.classList.remove("loading");
+  },700);
 });
 </script>
 
