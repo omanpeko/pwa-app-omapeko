@@ -20,12 +20,11 @@
 }
 html,body{
   margin:0;
-  padding:0;
   width:100%;
   height:100%;
   background:var(--bg);
   color:#fff;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont;
+  font-family: system-ui,-apple-system;
 }
 body{
   display:flex;
@@ -35,110 +34,90 @@ body{
   overflow:hidden;
 }
 
-h1{margin-bottom:10px;}
-p{opacity:.85}
-
-/* ボタン */
 button{
-  margin-top:20px;
+  margin-top:16px;
   background:none;
   border:2px solid var(--accent);
   color:var(--accent);
-  padding:16px 36px;
-  font-size:18px;
+  padding:14px 32px;
+  font-size:16px;
   border-radius:999px;
-  cursor:pointer;
-  transition:.25s;
-}
-button:active{
-  transform:scale(.95);
 }
 
-/* 波紋 */
+.hidden{display:none;}
+
+/* 演出 */
 .ripple{
   position:absolute;
   width:20px;
   height:20px;
   border-radius:50%;
   background:rgba(0,229,255,.25);
-  animation:ripple 0.8s ease-out forwards;
-  pointer-events:none;
+  animation:ripple .8s ease-out forwards;
 }
 @keyframes ripple{
-  to{
-    transform:scale(40);
-    opacity:0;
-  }
+  to{transform:scale(40);opacity:0;}
 }
-
-/* グリッチ */
-.glitch{
-  animation:glitch .4s linear;
-}
-@keyframes glitch{
-  0%{transform:translateX(0)}
-  25%{transform:translateX(-2px)}
-  50%{transform:translateX(2px)}
-  75%{transform:translateX(-1px)}
-  100%{transform:none}
-}
-
-/* ロード */
-.loading{
-  opacity:.6;
-  pointer-events:none;
-}
-
-/* 非表示 */
-.hidden{display:none;}
 </style>
 </head>
 <body>
 
-<div id="main">
-  <h1 id="title">omapeko App</h1>
+<!-- iPhone Safari -->
+<div id="iosSafari" class="hidden">
+  <h1>ホーム画面に追加してね</h1>
+  <p>共有 → ホーム画面に追加</p>
+</div>
+
+<!-- iPhone Chrome -->
+<div id="iosChrome" class="hidden">
+  <h1>Safariで開いてね</h1>
+  <p>Safariからならアプリ化できます</p>
+  <button id="copyUrl">URLをコピー</button>
+</div>
+
+<!-- 本編（PWA / Android / PC） -->
+<div id="app" class="hidden">
+  <h1>omapeko App</h1>
   <p id="status">READY</p>
-  <button id="action">TAP</button>
+  <button id="tap">TAP</button>
 </div>
 
 <script>
-const action = document.getElementById("action");
-const status = document.getElementById("status");
-const title = document.getElementById("title");
+const ua = navigator.userAgent;
+const isIOS = /iPhone|iPad|iPod/.test(ua);
+const isSafari = /^((?!chrome|crios|fxios).)*safari/i.test(ua);
+const isStandalone =
+  window.matchMedia('(display-mode: standalone)').matches ||
+  window.navigator.standalone === true;
 
-// 波紋生成
-function ripple(x,y){
-  const r = document.createElement("div");
-  r.className = "ripple";
-  r.style.left = x+"px";
-  r.style.top = y+"px";
-  document.body.appendChild(r);
-  setTimeout(()=>r.remove(),800);
+// 分岐
+if (isStandalone) {
+  app.classList.remove("hidden");
+} else if (isIOS && isSafari) {
+  iosSafari.classList.remove("hidden");
+} else if (isIOS && !isSafari) {
+  iosChrome.classList.remove("hidden");
+} else {
+  app.classList.remove("hidden");
 }
 
-action.addEventListener("click",(e)=>{
-  // バイブ（対応端末）
+// 演出
+const tap = document.getElementById("tap");
+tap?.addEventListener("click",(e)=>{
   navigator.vibrate?.(40);
+  const r=document.createElement("div");
+  r.className="ripple";
+  r.style.left=e.clientX+"px";
+  r.style.top=e.clientY+"px";
+  document.body.appendChild(r);
+  setTimeout(()=>r.remove(),800);
+  status.textContent="ACTIVE";
+});
 
-  // 波紋
-  ripple(e.clientX,e.clientY);
-
-  // ボタンロック
-  action.classList.add("loading");
-  action.textContent = "LOADING...";
-
-  // グリッチ
-  status.classList.add("glitch");
-  title.classList.add("glitch");
-
-  status.textContent = "RUNNING...";
-  document.documentElement.style.setProperty("--bg","#05070c");
-
-  setTimeout(()=>{
-    status.textContent = "ACTIVE";
-    action.textContent = "DONE";
-    action.classList.remove("loading");
-  },700);
+// URLコピー
+copyUrl?.addEventListener("click",()=>{
+  navigator.clipboard.writeText(location.href);
+  alert("Safariで貼り付けて開いてください");
 });
 </script>
 
