@@ -6,6 +6,7 @@
 
 <title>omapeko PWA</title>
 
+<!-- PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#000000">
 
@@ -32,31 +33,22 @@ body{
   display:flex;
   align-items:center;
   justify-content:center;
-  overflow:hidden;
-}
-
-/* Safari案内 */
-#guide{
-  text-align:center;
-  opacity:.85;
-}
-
-/* アプリ本体 */
-#app{
-  display:none;
   text-align:center;
 }
 
-/* ボタン */
+/* 共通UI */
+h1{margin-bottom:12px;}
+p{opacity:.85;}
 button{
+  margin-top:16px;
   background:none;
   border:2px solid var(--accent);
   color:var(--accent);
-  padding:16px 32px;
-  font-size:18px;
+  padding:14px 28px;
+  font-size:16px;
   border-radius:999px;
   cursor:pointer;
-  transition:.25s;
+  transition:.2s;
 }
 button:active{
   transform:scale(.95);
@@ -64,6 +56,7 @@ button:active{
   color:#000;
 }
 
+/* フェード */
 .fade{
   animation:fade .4s ease;
 }
@@ -71,45 +64,69 @@ button:active{
   from{opacity:0; transform:translateY(10px);}
   to{opacity:1; transform:none;}
 }
+
+/* 非表示 */
+.hidden{display:none;}
 </style>
 </head>
 <body>
 
-<!-- Safariで開いた時 -->
-<div id="guide">
-  <h2>omapeko PWA</h2>
-  <p>📱 共有 → ホーム画面に追加</p>
+<!-- iPhone Chrome用 -->
+<div id="iosChrome" class="hidden">
+  <h1>Safariで開いてね</h1>
+  <p>
+    iPhoneではSafariから開くと<br>
+    アプリとして全画面で使えます📱
+  </p>
+  <button id="copyUrl">URLをコピー</button>
 </div>
 
-<!-- PWA起動時 -->
-<div id="app">
+<!-- Safari / Android / PC 共通 -->
+<div id="main" class="hidden">
   <h1 id="title">omapeko App</h1>
   <p id="status">READY</p>
-  <button id="startBtn">START</button>
+  <button id="action">TAP</button>
 </div>
 
 <script>
-const isPWA = window.navigator.standalone === true;
+// ===== 判定 =====
+const ua = navigator.userAgent;
+const isIOS = /iPhone|iPad|iPod/.test(ua);
+const isSafari = /^((?!chrome|crios|fxios).)*safari/i.test(ua);
+const isStandalone =
+  window.matchMedia('(display-mode: standalone)').matches ||
+  window.navigator.standalone === true;
 
-// 表示切り替え
-if(isPWA){
-  document.getElementById("guide").style.display="none";
-  document.getElementById("app").style.display="block";
+// ===== 表示制御 =====
+const iosChrome = document.getElementById("iosChrome");
+const main = document.getElementById("main");
+
+if(isIOS && !isSafari && !isStandalone){
+  // iPhone Chrome
+  iosChrome.classList.remove("hidden");
+}else{
+  // Safari / Android / PC / PWA
+  main.classList.remove("hidden");
 }
 
-// ボタン挙動
-const btn = document.getElementById("startBtn");
+// ===== ボタン動作 =====
+const action = document.getElementById("action");
 const status = document.getElementById("status");
 
-btn.addEventListener("click",()=>{
+action?.addEventListener("click",()=>{
   status.textContent = "RUNNING...";
   status.classList.add("fade");
-
   document.documentElement.style.setProperty("--bg","#05070c");
 
   setTimeout(()=>{
     status.textContent = "TAP AGAIN";
   },600);
+});
+
+// ===== URLコピー =====
+document.getElementById("copyUrl")?.addEventListener("click",()=>{
+  navigator.clipboard.writeText(location.href);
+  alert("URLをコピーしました。\nSafariで貼り付けて開いてください。");
 });
 </script>
 
