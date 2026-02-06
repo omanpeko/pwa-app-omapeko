@@ -2,7 +2,13 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+
+<meta name="viewport"
+  content="width=device-width,
+  initial-scale=1.0,
+  maximum-scale=1.0,
+  user-scalable=no,
+  viewport-fit=cover">
 
 <title>omapeko PWA</title>
 
@@ -18,14 +24,22 @@
   --bg:#000;
   --accent:#00e5ff;
 }
+
+*{
+  touch-action: manipulation;
+  -webkit-user-select:none;
+  user-select:none;
+}
+
 html,body{
   margin:0;
   width:100%;
   height:100%;
   background:var(--bg);
   color:#fff;
-  font-family: system-ui,-apple-system;
+  font-family:system-ui,-apple-system;
 }
+
 body{
   display:flex;
   align-items:center;
@@ -47,6 +61,7 @@ button{
   cursor:pointer;
   transition:.25s;
 }
+
 button:active{
   transform:scale(.92);
   background:var(--accent);
@@ -63,6 +78,7 @@ button:active{
   animation:ripple .9s ease-out forwards;
   pointer-events:none;
 }
+
 @keyframes ripple{
   to{transform:scale(45);opacity:0;}
 }
@@ -70,12 +86,27 @@ button:active{
 .glitch{
   animation:glitch .35s linear;
 }
+
 @keyframes glitch{
   0%{transform:translateX(0)}
   25%{transform:translateX(-2px)}
   50%{transform:translateX(2px)}
   75%{transform:translateX(-1px)}
   100%{transform:none}
+}
+
+/* フラッシュ演出 */
+.flash{
+  position:absolute;
+  inset:0;
+  background:rgba(0,229,255,.15);
+  animation:flash .4s ease-out forwards;
+  pointer-events:none;
+}
+
+@keyframes flash{
+  from{opacity:1}
+  to{opacity:0}
 }
 </style>
 </head>
@@ -98,7 +129,7 @@ button:active{
   <button id="copyUrl">URLをコピー</button>
 </div>
 
-<!-- ===== 本編（PWA / Android / PC） ===== -->
+<!-- ===== 本編 ===== -->
 <div id="app" class="hidden">
   <h1 id="title">omapeko App</h1>
   <p id="status">READY</p>
@@ -106,6 +137,16 @@ button:active{
 </div>
 
 <script>
+/* ===== iOSズーム完全防止 ===== */
+let lastTouchEnd = 0;
+document.addEventListener('touchend', function (e) {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) e.preventDefault();
+  lastTouchEnd = now;
+}, { passive:false });
+
+document.addEventListener('gesturestart', e => e.preventDefault());
+
 /* ===== 判定 ===== */
 const ua = navigator.userAgent;
 const isIOS = /iPhone|iPad|iPod/.test(ua);
@@ -119,21 +160,14 @@ const iosSafari = document.getElementById("iosSafari");
 const iosChrome = document.getElementById("iosChrome");
 const app = document.getElementById("app");
 
-/* ===== 分岐（ここが肝） ===== */
+/* ===== 分岐 ===== */
 if (isStandalone) {
-  // ホーム画面から起動
   app.classList.remove("hidden");
-
 } else if (isIOS && isSafari) {
-  // iPhone Safari（未追加）
   iosSafari.classList.remove("hidden");
-
 } else if (isIOS && !isSafari) {
-  // iPhone Chrome
   iosChrome.classList.remove("hidden");
-
 } else {
-  // Android / PC
   app.classList.remove("hidden");
 }
 
@@ -142,28 +176,42 @@ const tap = document.getElementById("tap");
 const status = document.getElementById("status");
 const title = document.getElementById("title");
 
+let busy = false;
+
 tap?.addEventListener("click",(e)=>{
-  console.log("TAP OK");
+  if(busy) return;
+  busy = true;
 
   navigator.vibrate?.(40);
 
   // 波紋
   const r = document.createElement("div");
-  r.className = "ripple";
-  r.style.left = e.clientX + "px";
-  r.style.top = e.clientY + "px";
+  r.className="ripple";
+  r.style.left=e.clientX+"px";
+  r.style.top=e.clientY+"px";
   document.body.appendChild(r);
   setTimeout(()=>r.remove(),900);
 
-  // グリッチ
-  status.classList.add("glitch");
-  title.classList.add("glitch");
+  // フラッシュ
+  const f=document.createElement("div");
+  f.className="flash";
+  document.body.appendChild(f);
+  setTimeout(()=>f.remove(),400);
 
-  status.textContent = "RUNNING...";
+  // テキスト演出
+  title.classList.add("glitch");
+  status.classList.add("glitch");
+  status.textContent="RUNNING...";
 
   setTimeout(()=>{
-    status.textContent = "ACTIVE";
-  },600);
+    status.textContent="✨ ACTIVATED ✨";
+  },500);
+
+  // 3秒後に初期化
+  setTimeout(()=>{
+    status.textContent="READY";
+    busy=false;
+  },3000);
 });
 
 /* ===== URLコピー ===== */
