@@ -34,55 +34,79 @@ body{
   overflow:hidden;
 }
 
+.hidden{display:none;}
+
 button{
-  margin-top:16px;
+  margin-top:18px;
   background:none;
   border:2px solid var(--accent);
   color:var(--accent);
-  padding:14px 32px;
-  font-size:16px;
+  padding:16px 36px;
+  font-size:18px;
   border-radius:999px;
+  cursor:pointer;
+  transition:.25s;
+}
+button:active{
+  transform:scale(.92);
+  background:var(--accent);
+  color:#000;
 }
 
-.hidden{display:none;}
-
-/* 演出 */
+/* ===== 演出 ===== */
 .ripple{
   position:absolute;
   width:20px;
   height:20px;
   border-radius:50%;
   background:rgba(0,229,255,.25);
-  animation:ripple .8s ease-out forwards;
+  animation:ripple .9s ease-out forwards;
+  pointer-events:none;
 }
 @keyframes ripple{
-  to{transform:scale(40);opacity:0;}
+  to{transform:scale(45);opacity:0;}
+}
+
+.glitch{
+  animation:glitch .35s linear;
+}
+@keyframes glitch{
+  0%{transform:translateX(0)}
+  25%{transform:translateX(-2px)}
+  50%{transform:translateX(2px)}
+  75%{transform:translateX(-1px)}
+  100%{transform:none}
 }
 </style>
 </head>
 <body>
 
-<!-- iPhone Safari -->
+<!-- ===== iPhone Safari（未追加） ===== -->
 <div id="iosSafari" class="hidden">
-  <h1>ホーム画面に追加してね</h1>
-  <p>共有 → ホーム画面に追加</p>
+  <h1>ホーム画面に追加して</h1>
+  <p>
+    共有ボタンから<br>
+    「ホーム画面に追加」で<br>
+    アプリみたいに使える📱
+  </p>
 </div>
 
-<!-- iPhone Chrome -->
+<!-- ===== iPhone Chrome ===== -->
 <div id="iosChrome" class="hidden">
-  <h1>Safariで開いてね</h1>
+  <h1>Safariで開いて</h1>
   <p>Safariからならアプリ化できます</p>
   <button id="copyUrl">URLをコピー</button>
 </div>
 
-<!-- 本編（PWA / Android / PC） -->
+<!-- ===== 本編（PWA / Android / PC） ===== -->
 <div id="app" class="hidden">
-  <h1>omapeko App</h1>
+  <h1 id="title">omapeko App</h1>
   <p id="status">READY</p>
   <button id="tap">TAP</button>
 </div>
 
 <script>
+/* ===== 判定 ===== */
 const ua = navigator.userAgent;
 const isIOS = /iPhone|iPad|iPod/.test(ua);
 const isSafari = /^((?!chrome|crios|fxios).)*safari/i.test(ua);
@@ -90,49 +114,64 @@ const isStandalone =
   window.matchMedia('(display-mode: standalone)').matches ||
   window.navigator.standalone === true;
 
+/* ===== 要素 ===== */
 const iosSafari = document.getElementById("iosSafari");
 const iosChrome = document.getElementById("iosChrome");
 const app = document.getElementById("app");
 
-// ===== 分岐 =====
+/* ===== 分岐（ここが肝） ===== */
 if (isStandalone) {
+  // ホーム画面から起動
   app.classList.remove("hidden");
+
 } else if (isIOS && isSafari) {
+  // iPhone Safari（未追加）
   iosSafari.classList.remove("hidden");
+
 } else if (isIOS && !isSafari) {
+  // iPhone Chrome
   iosChrome.classList.remove("hidden");
+
 } else {
+  // Android / PC
   app.classList.remove("hidden");
 }
 
-// ===== 演出 =====
+/* ===== TAP演出 ===== */
 const tap = document.getElementById("tap");
 const status = document.getElementById("status");
+const title = document.getElementById("title");
 
-tap.addEventListener("click",(e)=>{
-  console.log("TAP clicked"); // ← デバッグ用
+tap?.addEventListener("click",(e)=>{
+  console.log("TAP OK");
 
   navigator.vibrate?.(40);
 
+  // 波紋
   const r = document.createElement("div");
   r.className = "ripple";
   r.style.left = e.clientX + "px";
   r.style.top = e.clientY + "px";
   document.body.appendChild(r);
+  setTimeout(()=>r.remove(),900);
 
-  setTimeout(()=>r.remove(),800);
+  // グリッチ
+  status.classList.add("glitch");
+  title.classList.add("glitch");
 
-  status.textContent = "ACTIVE";
+  status.textContent = "RUNNING...";
+
+  setTimeout(()=>{
+    status.textContent = "ACTIVE";
+  },600);
 });
 
-// ===== URLコピー =====
-const copyBtn = document.getElementById("copyUrl");
-copyBtn?.addEventListener("click",()=>{
+/* ===== URLコピー ===== */
+document.getElementById("copyUrl")?.addEventListener("click",()=>{
   navigator.clipboard.writeText(location.href);
   alert("Safariで貼り付けて開いてください");
 });
 </script>
-
 
 </body>
 </html>
